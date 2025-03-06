@@ -12,6 +12,7 @@ export interface CreateUserData {
   firstName?: string;
   lastName?: string;
   role?: 'admin' | 'user';
+  theme?: string;
 }
 
 /**
@@ -22,6 +23,7 @@ export interface UpdateUserData {
   firstName?: string;
   lastName?: string;
   role?: 'admin' | 'user';
+  theme?: string;
 }
 
 /**

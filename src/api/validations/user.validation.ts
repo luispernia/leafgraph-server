@@ -34,6 +34,7 @@ export const userValidation = {
       firstName: Joi.string().allow(''),
       lastName: Joi.string().allow(''),
       role: Joi.string().valid('admin', 'user').default('user'),
+      theme: Joi.string().default('light'),
     }),
   }),
 
@@ -72,6 +73,7 @@ export const userValidation = {
       firstName: Joi.string().allow(''),
       lastName: Joi.string().allow(''),
       role: Joi.string().valid('admin', 'user'),
+      theme: Joi.string(),
     }).min(1),
   }),
 

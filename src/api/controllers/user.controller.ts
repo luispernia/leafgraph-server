@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { UserService } from '../../services/user.service';
+import { TokenService, TokenType } from '../../services/token.service';
 import logger from '../../utils/logger';
+import { AuthRequest } from '../../middleware/auth.middleware';
 
 // Create a user service instance
 const userService = new UserService();
+// Create a token service instance
+const tokenService = new TokenService();
 
 /**
  * User controller for handling HTTP requests related to users
@@ -162,12 +166,16 @@ export class UserController {
         return;
       }
       
-      // In a real application, you would generate a JWT token here
+      // Generate JWT tokens
+      const tokens = tokenService.generateAuthTokens(user);
       
       res.status(200).json({
         success: true,
         message: 'Authentication successful',
-        data: user,
+        data: {
+          user,
+          tokens
+        }
       });
     } catch (error) {
       logger.error('Error in authenticateUser controller', { error });
@@ -175,6 +183,105 @@ export class UserController {
       res.status(500).json({
         success: false,
         message: 'Authentication failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Refresh a user's access token using a refresh token
+   * @param req - The request object
+   * @param res - The response object
+   */
+  async refreshToken(req: Request, res: Response): Promise<void> {
+    try {
+      const { refreshToken } = req.body;
+      
+      if (!refreshToken) {
+        res.status(400).json({
+          success: false,
+          message: 'Refresh token is required'
+        });
+        return;
+      }
+      
+      // Verify the refresh token
+      const decoded = tokenService.verifyToken(refreshToken, TokenType.REFRESH);
+      
+      if (!decoded) {
+        res.status(401).json({
+          success: false,
+          message: 'Invalid or expired refresh token'
+        });
+        return;
+      }
+      
+      // Get the user from the database
+      const user = await userService.findUserById(decoded.id);
+      
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+        return;
+      }
+      
+      // Generate a new access token
+      const accessToken = tokenService.generateAccessToken(user);
+      
+      res.status(200).json({
+        success: true,
+        data: {
+          accessToken
+        }
+      });
+    } catch (error) {
+      logger.error('Error in refreshToken controller', { error });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to refresh token',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Get the current user's profile
+   * @param req - The request object
+   * @param res - The response object
+   */
+  async getCurrentUser(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user || !req.user.id) {
+        res.status(401).json({
+          success: false,
+          message: 'Not authenticated',
+        });
+        return;
+      }
+      
+      const user = await userService.findUserById(req.user.id);
+      
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'User not found',
+        });
+        return;
+      }
+      
+      res.status(200).json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      logger.error('Error in getCurrentUser controller', { error });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get user profile',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

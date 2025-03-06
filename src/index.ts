@@ -6,6 +6,7 @@ import config from './config/config';
 import { dbService } from './db/database.service';
 import logger from './utils/logger';
 import userRoutes from './api/routes/user.routes';
+import authRoutes from './api/routes/auth.routes';
 
 // Create Express app
 const app = express();
@@ -31,6 +32,7 @@ app.use(limiter);
 
 // API routes
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

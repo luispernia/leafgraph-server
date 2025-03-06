@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
+import { authenticateJwt, authorizeRoles } from '../../middleware/auth.middleware';
 // import { validateRequest } from '../../middleware/validation.middleware';
 // import { userValidation } from '../validations/user.validation';
 
@@ -7,14 +8,14 @@ const router = Router();
 const userController = new UserController();
 
 /**
- * @route   POST /api/users
- * @desc    Create a new user
- * @access  Public
+ * @route   GET /api/users/me
+ * @desc    Get current user profile
+ * @access  Private
  */
-router.post(
-  '/',
-  // validateRequest(userValidation.createUser),
-  userController.createUser.bind(userController)
+router.get(
+  '/me',
+  authenticateJwt,
+  userController.getCurrentUser.bind(userController)
 );
 
 /**
@@ -24,6 +25,7 @@ router.post(
  */
 router.get(
   '/:id',
+  authenticateJwt,
   // validateRequest(userValidation.getUserById),
   userController.getUserById.bind(userController)
 );
@@ -35,6 +37,7 @@ router.get(
  */
 router.put(
   '/:id',
+  authenticateJwt,
   // validateRequest(userValidation.updateUser),
   userController.updateUser.bind(userController)
 );
@@ -42,23 +45,14 @@ router.put(
 /**
  * @route   DELETE /api/users/:id
  * @desc    Delete a user
- * @access  Private
+ * @access  Private (Admin only)
  */
 router.delete(
   '/:id',
+  authenticateJwt,
+  authorizeRoles(['admin']),
   // validateRequest(userValidation.deleteUser),
   userController.deleteUser.bind(userController)
-);
-
-/**
- * @route   POST /api/users/login
- * @desc    Authenticate a user
- * @access  Public
- */
-router.post(
-  '/login',
-  // validateRequest(userValidation.login),
-  userController.authenticateUser.bind(userController)
 );
 
 export default router; 
