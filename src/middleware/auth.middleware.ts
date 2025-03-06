@@ -28,20 +28,25 @@ export const authenticateJwt = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Get the token from the Authorization header
+    // Get the token from cookies (preferred) or Authorization header (fallback)
+    const tokenFromCookie = req.cookies.access_token;
     const authHeader = req.headers.authorization;
     
+    let token = tokenFromCookie;
+    
+    // Fallback to Authorization header if no cookie (for backwards compatibility)
+    if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+    
     // If no token is provided, return unauthorized
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       res.status(401).json({
         success: false,
         message: 'No authentication token provided',
       });
       return;
     }
-    
-    // Extract the token from the header
-    const token = authHeader.split(' ')[1];
     
     // Verify the token
     try {

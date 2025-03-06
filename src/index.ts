@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 import config from './config/config';
 import { dbService } from './db/database.service';
 import logger from './utils/logger';
@@ -13,7 +14,11 @@ const app = express();
 
 // Apply security middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: config.clientUrl,
+  credentials: true, // Allow cookies to be sent with requests
+}));
+app.use(cookieParser()); // Add cookie parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

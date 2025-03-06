@@ -71,8 +71,15 @@ export class UserService {
         await dbService.connect();
       }
       
-      const user = await User.findById(id).select('-password');
-      return user;
+      const user = await User.findById(id).select('-password -__v').lean().exec();
+      
+      if (!user) {
+        return null;
+      }
+      
+      // Transform _id to id with proper typing
+      const { _id, ...rest } = user;
+      return { id: _id.toString(), ...rest } as unknown as IUser;
     } catch (error) {
       logger.error('Error finding user by ID', { error, id });
       throw error;

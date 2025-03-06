@@ -80,9 +80,7 @@ export class UserController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
       const user = await userService.updateUser(id, updateData);
-      
       if (!user) {
         res.status(404).json({
           success: false,
@@ -166,15 +164,15 @@ export class UserController {
         return;
       }
       
-      // Generate JWT tokens
-      const tokens = tokenService.generateAuthTokens(user);
+      // Set authentication cookies
+      tokenService.setAuthCookies(res, user);
       
+      // Return only user data (tokens are in cookies)
       res.status(200).json({
         success: true,
         message: 'Authentication successful',
         data: {
-          user,
-          tokens
+          user
         }
       });
     } catch (error) {
@@ -195,10 +193,11 @@ export class UserController {
    */
   async refreshToken(req: Request, res: Response): Promise<void> {
     try {
-      const { refreshToken } = req.body;
+      // Get refresh token from cookie instead of request body
+      const refreshToken = req.cookies.refresh_token;
       
       if (!refreshToken) {
-        res.status(400).json({
+        res.status(401).json({
           success: false,
           message: 'Refresh token is required'
         });
@@ -209,6 +208,9 @@ export class UserController {
       const decoded = tokenService.verifyToken(refreshToken, TokenType.REFRESH);
       
       if (!decoded) {
+        // Clear invalid cookies
+        tokenService.clearAuthCookies(res);
+        
         res.status(401).json({
           success: false,
           message: 'Invalid or expired refresh token'
@@ -220,6 +222,9 @@ export class UserController {
       const user = await userService.findUserById(decoded.id);
       
       if (!user) {
+        // Clear cookies if user not found
+        tokenService.clearAuthCookies(res);
+        
         res.status(404).json({
           success: false,
           message: 'User not found'
@@ -227,14 +232,12 @@ export class UserController {
         return;
       }
       
-      // Generate a new access token
-      const accessToken = tokenService.generateAccessToken(user);
+      // Set new cookies with fresh tokens
+      tokenService.setAuthCookies(res, user);
       
       res.status(200).json({
         success: true,
-        data: {
-          accessToken
-        }
+        message: 'Token refreshed successfully'
       });
     } catch (error) {
       logger.error('Error in refreshToken controller', { error });
@@ -286,4 +289,78 @@ export class UserController {
       });
     }
   }
+
+  /**
+   * Logout a user by clearing authentication cookies
+   * @param req - The request object
+   * @param res - The response object
+   */
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      // Clear authentication cookies
+      tokenService.clearAuthCookies(res);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Logged out successfully',
+      });
+    } catch (error) {
+      logger.error('Error in logout controller', { error });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to logout',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Get user preferences (theme and other settings)
+   * @param req - The request object
+   * @param res - The response object
+   */
+  async getUserPreferences(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      logger.info("getUserPreferences controller", { id });
+      // Check if user is requesting their own preferences or if they're an admin
+      if (req.user?.id !== id && req.user?.role !== 'admin') {
+        res.status(403).json({
+          success: false,
+          message: 'Unauthorized to access these preferences',
+        });
+        return;
+      }
+      
+      const user = await userService.findUserById(id);
+      
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          message: 'User not found',
+        });
+        return;
+      }
+      
+      // Extract only the preference-related fields
+      const preferences = {
+        theme: user.theme || 'light',
+      };
+      
+      res.status(200).json({
+        success: true,
+        data: {preferences},
+      });
+    } catch (error) {
+      logger.error('Error in getUserPreferences controller', { error, id: req.params.id });
+      
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get user preferences',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+  
 } 

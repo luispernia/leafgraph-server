@@ -10,6 +10,9 @@ const envVarsSchema = joi.object({
   NODE_ENV: joi.string().valid('development', 'production', 'test').default('development'),
   PORT: joi.number().default(3000),
   
+  // Client URL for CORS
+  CLIENT_URL: joi.string().default('http://localhost:5173').description('Client URL for CORS'),
+  
   // MongoDB Configuration
   MONGODB_URI: joi.string().required().description('MongoDB connection string'),
   MONGODB_USER: joi.string().allow('').description('MongoDB username'),
@@ -41,6 +44,9 @@ export default {
   isDevelopment: envVars.NODE_ENV === 'development',
   isTest: envVars.NODE_ENV === 'test',
   port: envVars.PORT,
+  
+  // Client URL
+  clientUrl: envVars.CLIENT_URL,
   
   mongodb: {
     uri: envVars.MONGODB_URI,

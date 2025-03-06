@@ -29,6 +29,16 @@ router.post(
 );
 
 /**
+ * @route   POST /api/auth/logout
+ * @desc    Logout a user by clearing auth cookies
+ * @access  Public
+ */
+router.post(
+  '/logout',
+  userController.logout.bind(userController)
+);
+
+/**
  * @route   POST /api/auth/register
  * @desc    Register a new user
  * @access  Public

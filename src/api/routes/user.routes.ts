@@ -50,4 +50,16 @@ router.delete(
   userController.deleteUser.bind(userController)
 );
 
+/**
+ * @route   GET /api/users/:id/preferences
+ * @desc    Get user preferences (theme and other settings)
+ * @access  Private
+ */
+router.get(
+  '/:id/preferences',
+  authenticateJwt,
+  userController.getUserPreferences.bind(userController)
+);
+
+
 export default router; 

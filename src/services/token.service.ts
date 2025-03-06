@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { Response } from 'express';
 import config from '../config/config';
 import { IUser } from '../models/user.model';
 import logger from '../utils/logger';
@@ -22,6 +23,28 @@ interface TokenPayload {
 }
 
 /**
+ * Cookie options for tokens
+ */
+const cookieOptions = {
+  httpOnly: true,
+  secure: config.isProduction, // secure in production
+  sameSite: config.isProduction ? 'none' : 'lax' as 'none' | 'lax',
+  path: '/',
+};
+
+// Access token cookie expires with the token
+const accessTokenCookieOptions = {
+  ...cookieOptions,
+  maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
+};
+
+// Refresh token cookie (longer expiry)
+const refreshTokenCookieOptions = {
+  ...cookieOptions,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+};
+
+/**
  * Service for handling JWT tokens
  */
 export class TokenService {
@@ -39,7 +62,7 @@ export class TokenService {
     };
     
     return jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiration,
+      expiresIn: '15m', // Shorter expiration for access tokens
     });
   }
   
@@ -98,5 +121,30 @@ export class TokenService {
       accessToken: this.generateAccessToken(user),
       refreshToken: this.generateRefreshToken(user),
     };
+  }
+
+  /**
+   * Set authentication cookies in the response
+   * @param res - Express response object
+   * @param user - User to generate tokens for
+   */
+  setAuthCookies(res: Response, user: IUser): void {
+    const { accessToken, refreshToken } = this.generateAuthTokens(user);
+    // Set cookies
+    res.cookie('access_token', accessToken, accessTokenCookieOptions);
+    res.cookie('refresh_token', refreshToken, refreshTokenCookieOptions);
+    
+    logger.debug('Auth cookies set successfully');
+  }
+  
+  /**
+   * Clear authentication cookies from the response
+   * @param res - Express response object
+   */
+  clearAuthCookies(res: Response): void {
+    res.clearCookie('access_token', cookieOptions);
+    res.clearCookie('refresh_token', cookieOptions);
+    
+    logger.debug('Auth cookies cleared successfully');
   }
 } 
