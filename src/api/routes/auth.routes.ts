@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
-// import { validateRequest } from '../../middleware/validation.middleware';
-// import { userValidation } from '../validations/user.validation';
+import { validateRequest } from '../../middleware/validation.middleware';
+import { userValidation } from '../validations/user.validation';
 
 const router = Router();
 const userController = new UserController();
@@ -13,7 +13,7 @@ const userController = new UserController();
  */
 router.post(
   '/login',
-  // validateRequest(userValidation.login),
+  validateRequest(userValidation.login),
   userController.authenticateUser.bind(userController)
 );
 
@@ -24,7 +24,7 @@ router.post(
  */
 router.post(
   '/refresh',
-  // validateRequest(userValidation.refreshToken),
+  validateRequest(userValidation.refreshToken),
   userController.refreshToken.bind(userController)
 );
 
@@ -35,7 +35,7 @@ router.post(
  */
 router.post(
   '/register',
-  // validateRequest(userValidation.createUser),
+  validateRequest(userValidation.createUser),
   userController.createUser.bind(userController)
 );
 

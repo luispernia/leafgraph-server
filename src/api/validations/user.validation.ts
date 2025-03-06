@@ -8,34 +8,32 @@ export const userValidation = {
    * Validation schema for creating a user
    */
   createUser: Joi.object({
-    body: Joi.object({
-      username: Joi.string().required().min(3).max(50)
-        .messages({
-          'string.base': 'Username must be a string',
-          'string.empty': 'Username is required',
-          'string.min': 'Username must be at least {#limit} characters',
-          'string.max': 'Username cannot exceed {#limit} characters',
-          'any.required': 'Username is required',
-        }),
-      email: Joi.string().required().email()
-        .messages({
-          'string.base': 'Email must be a string',
-          'string.empty': 'Email is required',
-          'string.email': 'Please provide a valid email address',
-          'any.required': 'Email is required',
-        }),
-      password: Joi.string().required().min(8)
-        .messages({
-          'string.base': 'Password must be a string',
-          'string.empty': 'Password is required',
-          'string.min': 'Password must be at least {#limit} characters',
-          'any.required': 'Password is required',
-        }),
-      firstName: Joi.string().allow(''),
-      lastName: Joi.string().allow(''),
-      role: Joi.string().valid('admin', 'user').default('user'),
-      theme: Joi.string().default('light'),
-    }),
+    username: Joi.string().required().min(3).max(50)
+      .messages({
+        'string.base': 'Username must be a string',
+        'string.empty': 'Username is required',
+        'string.min': 'Username must be at least {#limit} characters',
+        'string.max': 'Username cannot exceed {#limit} characters',
+        'any.required': 'Username is required',
+      }),
+    email: Joi.string().required().email()
+      .messages({
+        'string.base': 'Email must be a string',
+        'string.empty': 'Email is required',
+        'string.email': 'Please provide a valid email address',
+        'any.required': 'Email is required',
+      }),
+    password: Joi.string().required().min(8)
+      .messages({
+        'string.base': 'Password must be a string',
+        'string.empty': 'Password is required',
+        'string.min': 'Password must be at least {#limit} characters',
+        'any.required': 'Password is required',
+      }),
+    firstName: Joi.string().allow(''),
+    lastName: Joi.string().allow(''),
+    role: Joi.string().valid('admin', 'user').default('user'),
+    theme: Joi.string().default('light'),
   }),
 
   /**
@@ -95,19 +93,29 @@ export const userValidation = {
    * Validation schema for user login
    */
   login: Joi.object({
-    body: Joi.object({
-      username: Joi.string().required()
-        .messages({
-          'string.base': 'Username must be a string',
-          'string.empty': 'Username is required',
-          'any.required': 'Username is required',
-        }),
-      password: Joi.string().required()
-        .messages({
-          'string.base': 'Password must be a string',
-          'string.empty': 'Password is required',
-          'any.required': 'Password is required',
-        }),
-    }),
+    username: Joi.string().required()
+      .messages({
+        'string.base': 'Username must be a string',
+        'string.empty': 'Username is required',
+        'any.required': 'Username is required',
+      }),
+    password: Joi.string().required()
+      .messages({
+        'string.base': 'Password must be a string',
+        'string.empty': 'Password is required',
+        'any.required': 'Password is required',
+      }),
+  }),
+
+  /**
+   * Validation schema for refreshing access token
+   */
+  refreshToken: Joi.object({
+    refreshToken: Joi.string().required()
+      .messages({
+        'string.base': 'Refresh token must be a string',
+        'string.empty': 'Refresh token is required',
+        'any.required': 'Refresh token is required',
+      }),
   }),
 }; 

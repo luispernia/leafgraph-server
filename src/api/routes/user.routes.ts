@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { authenticateJwt, authorizeRoles } from '../../middleware/auth.middleware';
-// import { validateRequest } from '../../middleware/validation.middleware';
-// import { userValidation } from '../validations/user.validation';
 
 const router = Router();
 const userController = new UserController();
@@ -26,7 +24,6 @@ router.get(
 router.get(
   '/:id',
   authenticateJwt,
-  // validateRequest(userValidation.getUserById),
   userController.getUserById.bind(userController)
 );
 
@@ -38,7 +35,6 @@ router.get(
 router.put(
   '/:id',
   authenticateJwt,
-  // validateRequest(userValidation.updateUser),
   userController.updateUser.bind(userController)
 );
 
@@ -51,7 +47,6 @@ router.delete(
   '/:id',
   authenticateJwt,
   authorizeRoles(['admin']),
-  // validateRequest(userValidation.deleteUser),
   userController.deleteUser.bind(userController)
 );
 

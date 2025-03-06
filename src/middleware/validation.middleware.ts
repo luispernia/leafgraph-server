@@ -5,9 +5,10 @@ import logger from '../utils/logger';
 /**
  * Middleware for validating request data using Joi schemas
  * @param schema - The Joi validation schema
+ * @returns Express middleware function
  */
 export const validateRequest = (schema: Joi.ObjectSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const validationOptions = {
       abortEarly: false, // Include all errors
       allowUnknown: true, // Ignore unknown props
@@ -17,23 +18,23 @@ export const validateRequest = (schema: Joi.ObjectSchema) => {
     // Determine which part of the request to validate
     const dataToValidate: Record<string, any> = {};
     
-    // Add body if it exists and schema has body validation
-    if (req.body && schema.extract('body')) {
-      dataToValidate['body'] = req.body;
+    // Add body if it exists
+    if (req.body && Object.keys(req.body).length > 0) {
+      dataToValidate.body = req.body;
     }
     
-    // Add params if they exist and schema has params validation
-    if (req.params && schema.extract('params')) {
-      dataToValidate['params'] = req.params;
+    // Add params if they exist
+    if (req.params && Object.keys(req.params).length > 0) {
+      dataToValidate.params = req.params;
     }
     
-    // Add query if it exists and schema has query validation
-    if (req.query && schema.extract('query')) {
-      dataToValidate['query'] = req.query;
+    // Add query if it exists
+    if (req.query && Object.keys(req.query).length > 0) {
+      dataToValidate.query = req.query;
     }
 
     // Validate the request data
-    const { error, value } = schema.validate(dataToValidate, validationOptions);
+    const { error, value } = schema.validate(req.body, validationOptions);
 
     if (error) {
       // Format validation errors
@@ -48,11 +49,12 @@ export const validateRequest = (schema: Joi.ObjectSchema) => {
         errors: errorDetails 
       });
 
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Validation error',
         errors: errorDetails,
       });
+      return;
     }
 
     // Replace request properties with validated data
@@ -60,6 +62,6 @@ export const validateRequest = (schema: Joi.ObjectSchema) => {
     if (value.params) req.params = value.params;
     if (value.query) req.query = value.query;
 
-    return next();
+    next();
   };
-}; 
+};
